@@ -1,58 +1,141 @@
-# Adshaya R | Portfolio (React + Node.js)
+# cliui
 
-## Structure
+![ci](https://github.com/yargs/cliui/workflows/ci/badge.svg)
+[![NPM version](https://img.shields.io/npm/v/cliui.svg)](https://www.npmjs.com/package/cliui)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+![nycrc config on GitHub](https://img.shields.io/nycrc/yargs/cliui)
+
+easily create complex multi-column command-line-interfaces.
+
+## Example
+
+```js
+const ui = require('cliui')()
+
+ui.div('Usage: $0 [command] [options]')
+
+ui.div({
+  text: 'Options:',
+  padding: [2, 0, 1, 0]
+})
+
+ui.div(
+  {
+    text: "-f, --file",
+    width: 20,
+    padding: [0, 4, 0, 4]
+  },
+  {
+    text: "the file to load." +
+      chalk.green("(if this description is long it wraps).")
+    ,
+    width: 20
+  },
+  {
+    text: chalk.red("[required]"),
+    align: 'right'
+  }
+)
+
+console.log(ui.toString())
 ```
-portfolio/
-├── package.json            root scripts (run client and server together)
-├── .prettierrc / .editorconfig
-├── client/                 React (Vite)
-│   ├── public/Adshaya_R_Resume.pdf
-│   └── src/
-│       ├── data.js         ALL content lives here
-│       ├── index.css       design tokens and styles
-│       ├── components/     page sections + ui/ (Section, Chips, Bullets)
-│       ├── hooks/          useActiveSection (scroll-aware navigation)
-│       └── utils/api.js    contact API call
-└── server/src/             Express API
-    ├── config/env.js       environment settings
-    ├── routes/contact.js   POST /api/contact (rate limited)
-    ├── validators/         input validation
-    ├── services/mailer.js  email sending
-    ├── app.js              middleware + routes
-    └── server.js           entry point
+
+## Deno/ESM Support
+
+As of `v7` `cliui` supports [Deno](https://github.com/denoland/deno) and
+[ESM](https://nodejs.org/api/esm.html#esm_ecmascript_modules):
+
+```typescript
+import cliui from "https://deno.land/x/cliui/deno.ts";
+
+const ui = cliui({})
+
+ui.div('Usage: $0 [command] [options]')
+
+ui.div({
+  text: 'Options:',
+  padding: [2, 0, 1, 0]
+})
+
+ui.div({
+  text: "-f, --file",
+  width: 20,
+  padding: [0, 4, 0, 4]
+})
+
+console.log(ui.toString())
 ```
 
-## Run in VS Code
-1. Install Node.js 18+ and open the `portfolio` folder in VS Code.
-2. Open the terminal (Ctrl + `) and run:
+<img width="500" src="screenshot.png">
+
+## Layout DSL
+
+cliui exposes a simple layout DSL:
+
+If you create a single `ui.div`, passing a string rather than an
+object:
+
+* `\n`: characters will be interpreted as new rows.
+* `\t`: characters will be interpreted as new columns.
+* `\s`: characters will be interpreted as padding.
+
+**as an example...**
+
+```js
+var ui = require('./')({
+  width: 60
+})
+
+ui.div(
+  'Usage: node ./bin/foo.js\n' +
+  '  <regex>\t  provide a regex\n' +
+  '  <glob>\t  provide a glob\t [required]'
+)
+
+console.log(ui.toString())
 ```
-npm run install:all
-cd server && cp .env.example .env && cd ..      (Windows: copy .env.example .env)
-npm run dev
+
+**will output:**
+
+```shell
+Usage: node ./bin/foo.js
+  <regex>  provide a regex
+  <glob>   provide a glob          [required]
 ```
-Frontend: http://localhost:5173  |  API: http://localhost:5000
 
-Recommended VS Code extensions: ESLint, Prettier, ES7+ React Snippets.
+## Methods
 
-## Useful commands
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start frontend and backend together |
-| `npm run lint` | Check code quality (ESLint) |
-| `npm run format` | Auto-format all code (Prettier) |
-| `npm run build` | Production build of the frontend |
+```js
+cliui = require('cliui')
+```
 
-## Real emails
-Google Account > Security > enable 2-Step Verification > create an App Password.
-Put it in `server/.env` as `MAIL_PASS` and your Gmail as `MAIL_USER`.
-Without these, messages are printed in the server terminal (good for testing).
+### cliui({width: integer})
 
-## Customise
-- Content: `client/src/data.js` (add `repo` and `demo` links to each project)
-- Resume: replace `client/public/Adshaya_R_Resume.pdf` (keep the file name)
-- Colors and fonts: top of `client/src/index.css`
+Specify the maximum width of the UI being generated.
+If no width is provided, cliui will try to get the current window's width and use it, and if that doesn't work, width will be set to `80`.
 
-## Deploy
-1. Push to GitHub.
-2. Render (backend): root `server`, build `npm install`, start `npm start`; add the .env values and set `CLIENT_ORIGIN` to your frontend URL.
-3. Vercel (frontend): root `client`, framework Vite; set `VITE_API_URL` to your Render URL.
+### cliui({wrap: boolean})
+
+Enable or disable the wrapping of text in a column.
+
+### cliui.div(column, column, column)
+
+Create a row with any number of columns, a column
+can either be a string, or an object with the following
+options:
+
+* **text:** some text to place in the column.
+* **width:** the width of a column.
+* **align:** alignment, `right` or `center`.
+* **padding:** `[top, right, bottom, left]`.
+* **border:** should a border be placed around the div?
+
+### cliui.span(column, column, column)
+
+Similar to `div`, except the next row will be appended without
+a new line being created.
+
+### cliui.resetOutput()
+
+Resets the UI elements of the current cliui instance, maintaining the values
+set for `width` and `wrap`.
